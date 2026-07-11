@@ -1,0 +1,7 @@
+{
+    "domain": "advanced_cover",
+    "name": "Advanced Cover",
+    "config_flow": true,
+    "iot_class": "calculated",
+    "version": "1.0.0"
+}

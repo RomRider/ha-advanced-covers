@@ -1,0 +1,51 @@
+set_min_value:
+  target:
+    entity:
+      domain: cover
+      integration: advanced_cover
+  fields:
+    value:
+      required: true
+      example: 10
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    enforce:
+      required: false
+      example: true
+      selector:
+        boolean:
+
+set_max_value:
+  target:
+    entity:
+      domain: cover
+      integration: advanced_cover
+  fields:
+    value:
+      required: true
+      example: 90
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    enforce:
+      required: false
+      example: true
+      selector:
+        boolean:
+
+set_enforce_bounds:
+  target:
+    entity:
+      domain: cover
+      integration: advanced_cover
+  fields:
+    enforce:
+      required: true
+      example: true
+      selector:
+        boolean:
