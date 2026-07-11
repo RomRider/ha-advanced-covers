@@ -6,6 +6,7 @@
       "label": "devcontainer: Start HA",
       "command": "echo 'Starting Home Assistant' && sh -c 'container start-debug'",
       "problemMatcher": {
+        "owner": "custom",
         "pattern": [
           {
             "regexp": ".",
@@ -15,9 +16,9 @@
           }
         ],
         "background": {
-          "activeOnStart": true,
-          "beginsPattern": "5678$",
-          "endsPattern": "."
+          "activeOnStart": false,
+          "beginsPattern": ".",
+          "endsPattern": ".*Listening for remote debug connection on.*"
         }
       },
       "group": "test",

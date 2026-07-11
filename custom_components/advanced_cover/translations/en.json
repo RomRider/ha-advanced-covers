@@ -27,7 +27,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure Advanced Cover",
+        "title": "Configure an Advanced Cover",
         "data": {
           "wrapped_entity": "Cover to wrap",
           "min_value": "Minimum position",
