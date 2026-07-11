@@ -66,7 +66,6 @@ from .const import (
     CONF_MIN_VALUE,
     CONF_OPEN_DURATION,
     CONF_SKIP_STOP_AT_LIMITS,
-    CONF_TIME_BASED_POSITIONING,
     CONF_WRAPPED_ENTITY,
     DEFAULT_CLOSE_DURATION,
     DEFAULT_ENFORCE_BOUNDS,
@@ -74,7 +73,6 @@ from .const import (
     DEFAULT_MIN_VALUE,
     DEFAULT_OPEN_DURATION,
     DEFAULT_SKIP_STOP_AT_LIMITS,
-    DEFAULT_TIME_BASED_POSITIONING,
     SERVICE_SET_ENFORCE_BOUNDS,
     SERVICE_SET_MAX_VALUE,
     SERVICE_SET_MIN_VALUE,
@@ -139,9 +137,6 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
         self._max_value = float(config.get(CONF_MAX_VALUE, DEFAULT_MAX_VALUE))
         self._enforce_bounds = bool(
             config.get(CONF_ENFORCE_BOUNDS, DEFAULT_ENFORCE_BOUNDS)
-        )
-        self._time_based_positioning = bool(
-            config.get(CONF_TIME_BASED_POSITIONING, DEFAULT_TIME_BASED_POSITIONING)
         )
         # Floor at 0.1s defensively: the config flow's NumberSelector(min=1)
         # keeps this away from 0 through normal UX, but a 0-second duration
@@ -237,16 +232,14 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
         simulating = self._simulation_enabled()
 
         if (
-            self._time_based_positioning
-            and not simulating
+            not simulating
             and CoverEntityFeature.SET_POSITION not in self._wrapped_supported_features
             and CoverEntityFeature.STOP not in self._wrapped_supported_features
             and not self._warned_missing_stop
         ):
             _LOGGER.warning(
-                "%s: 'time_based_positioning' is enabled but %s does not "
-                "support stopping mid-travel; simulated positioning will "
-                "stay inactive",
+                "%s: %s reports neither SET_POSITION nor STOP support; "
+                "simulated positioning cannot activate for it",
                 self.entity_id,
                 self._wrapped_entity_id,
             )
@@ -301,10 +294,12 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
         )
 
     def _simulation_enabled(self) -> bool:
-        """Whether simulated absolute positioning should govern this entity."""
+        """Whether simulated absolute positioning should govern this entity.
 
-        if not self._time_based_positioning:
-            return False
+        Automatic, not a user setting: it activates whenever the wrapped
+        cover can't report a real position but can be stopped mid-travel.
+        """
+
         if CoverEntityFeature.SET_POSITION in self._wrapped_supported_features:
             return False  # real positioning always wins
         if CoverEntityFeature.STOP not in self._wrapped_supported_features:
@@ -463,7 +458,6 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
             CONF_MAX_VALUE: self._effective_max(),
             CONF_ENFORCE_BOUNDS: self._enforce_bounds,
             CONF_WRAPPED_ENTITY: self._wrapped_entity_id,
-            CONF_TIME_BASED_POSITIONING: self._time_based_positioning,
             CONF_OPEN_DURATION: self._open_duration,
             CONF_CLOSE_DURATION: self._close_duration,
             CONF_SKIP_STOP_AT_LIMITS: self._skip_stop_at_limits,

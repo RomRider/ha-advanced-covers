@@ -4,7 +4,7 @@
       "user": {
         "title": "Add an Advanced Cover",
         "data": {
-          "wrapped_entity": "Cover to wrap"
+          "wrapped_entity": "Cover to wrap (must support open, close, and stop commands at least else it won't be listed here)"
         }
       },
       "settings": {
@@ -15,7 +15,6 @@
           "max_value": "Maximum position",
           "enforce_bounds": "Proactively enforce bounds",
           "hide_wrapped_entity": "Hide the wrapped entity",
-          "time_based_positioning": "Simulate absolute positioning by time",
           "open_duration": "Full open travel time",
           "close_duration": "Full close travel time",
           "skip_stop_at_limits": "Rely on the cover's own endstop at full open/close"
@@ -25,8 +24,7 @@
           "max_value": "The wrapped cover will never be commanded above this position.",
           "enforce_bounds": "If the wrapped cover's current position is outside the bounds when they change, immediately re-command it back within bounds.",
           "hide_wrapped_entity": "Hide the wrapped cover entity in the Home Assistant UI. It remains fully available to automations and scripts.",
-          "time_based_positioning": "Only shown when the wrapped cover doesn't support precise positioning but can be stopped mid-travel. Estimates its position from elapsed travel time so this Advanced Cover can still be set to a percentage.",
-          "open_duration": "Time in seconds for the wrapped cover to travel from fully closed (0%) to fully open (100%).",
+          "open_duration": "Only shown when the wrapped cover doesn't support precise positioning: time in seconds for it to travel from fully closed (0%) to fully open (100%). This Advanced Cover simulates its position from elapsed travel time in that case.",
           "close_duration": "Time in seconds for the wrapped cover to travel from fully open (100%) to fully closed (0%).",
           "skip_stop_at_limits": "If a simulated move finishes at 0% or 100%, don't send an explicit stop command - assume the wrapped cover's hardware limit switch already stopped it. A move that finishes at any other bound always sends the stop command."
         }
@@ -48,7 +46,6 @@
           "max_value": "Maximum position",
           "enforce_bounds": "Proactively enforce bounds",
           "hide_wrapped_entity": "Hide the wrapped entity",
-          "time_based_positioning": "Simulate absolute positioning by time",
           "open_duration": "Full open travel time",
           "close_duration": "Full close travel time",
           "skip_stop_at_limits": "Rely on the cover's own endstop at full open/close"
@@ -58,8 +55,7 @@
           "max_value": "The wrapped cover will never be commanded above this position.",
           "enforce_bounds": "If the wrapped cover's current position is outside the bounds when they change, immediately re-command it back within bounds.",
           "hide_wrapped_entity": "Hide the wrapped cover entity in the Home Assistant UI. It remains fully available to automations and scripts.",
-          "time_based_positioning": "Only shown when the wrapped cover doesn't support precise positioning but can be stopped mid-travel. Estimates its position from elapsed travel time so this Advanced Cover can still be set to a percentage.",
-          "open_duration": "Time in seconds for the wrapped cover to travel from fully closed (0%) to fully open (100%).",
+          "open_duration": "Only shown when the wrapped cover doesn't support precise positioning: time in seconds for it to travel from fully closed (0%) to fully open (100%). This Advanced Cover simulates its position from elapsed travel time in that case.",
           "close_duration": "Time in seconds for the wrapped cover to travel from fully open (100%) to fully closed (0%).",
           "skip_stop_at_limits": "If a simulated move finishes at 0% or 100%, don't send an explicit stop command - assume the wrapped cover's hardware limit switch already stopped it. A move that finishes at any other bound always sends the stop command."
         }

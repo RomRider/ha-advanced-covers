@@ -6,7 +6,7 @@ from typing import Any, Mapping
 
 import voluptuous as vol
 
-from homeassistant.components.cover import CoverEntityFeature
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -29,7 +29,6 @@ from .const import (
     CONF_MIN_VALUE,
     CONF_OPEN_DURATION,
     CONF_SKIP_STOP_AT_LIMITS,
-    CONF_TIME_BASED_POSITIONING,
     CONF_WRAPPED_ENTITY,
     DEFAULT_CLOSE_DURATION,
     DEFAULT_ENFORCE_BOUNDS,
@@ -38,7 +37,6 @@ from .const import (
     DEFAULT_MIN_VALUE,
     DEFAULT_OPEN_DURATION,
     DEFAULT_SKIP_STOP_AT_LIMITS,
-    DEFAULT_TIME_BASED_POSITIONING,
     DOMAIN,
 )
 
@@ -74,9 +72,40 @@ def _own_entity_ids(hass: HomeAssistant) -> list[str]:
     ]
 
 
+def _wrapped_entity_candidates(hass: HomeAssistant) -> list[str]:
+    """Return cover entity IDs that support OPEN, CLOSE, and STOP (all three).
+
+    The EntitySelector's declarative `filter.supported_features` can only
+    express "has at least one of these features" (the frontend checks
+    `supported_features & mask != 0`, an overlap test, not containment) -
+    there's no way to require all three through it. So the required feature
+    set is enforced here instead, as an explicit include list the picker
+    filters its rendered options against.
+    """
+
+    own = set(_own_entity_ids(hass))
+    required = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
+    return [
+        state.entity_id
+        for state in hass.states.async_all(COVER_DOMAIN)
+        if state.entity_id not in own
+        and (
+            CoverEntityFeature(state.attributes.get(
+                ATTR_SUPPORTED_FEATURES, 0))
+            & required
+        )
+        == required
+    ]
+
+
 def _wrapped_entity_field(hass: HomeAssistant) -> EntitySelector:
     return EntitySelector(
-        EntitySelectorConfig(domain="cover", exclude_entities=_own_entity_ids(hass))
+        EntitySelectorConfig(
+            domain="cover",
+            include_entities=_wrapped_entity_candidates(hass),
+        )
     )
 
 
@@ -98,7 +127,8 @@ def _wrapped_can_simulate_position(hass: HomeAssistant, wrapped_entity_id: str) 
     if state is None:
         return False
 
-    features = CoverEntityFeature(state.attributes.get(ATTR_SUPPORTED_FEATURES, 0))
+    features = CoverEntityFeature(
+        state.attributes.get(ATTR_SUPPORTED_FEATURES, 0))
     return (
         CoverEntityFeature.SET_POSITION not in features
         and CoverEntityFeature.STOP in features
@@ -109,6 +139,12 @@ def _settings_fields(
     hass: HomeAssistant, wrapped_entity_id: str, defaults: Mapping[str, Any]
 ) -> dict:
     schema: dict = {
+        vol.Optional(
+            CONF_HIDE_WRAPPED_ENTITY,
+            default=defaults.get(
+                CONF_HIDE_WRAPPED_ENTITY, DEFAULT_HIDE_WRAPPED_ENTITY
+            ),
+        ): BooleanSelector(),
         vol.Optional(
             CONF_MIN_VALUE,
             default=defaults.get(CONF_MIN_VALUE, DEFAULT_MIN_VALUE),
@@ -121,44 +157,34 @@ def _settings_fields(
             CONF_ENFORCE_BOUNDS,
             default=defaults.get(CONF_ENFORCE_BOUNDS, DEFAULT_ENFORCE_BOUNDS),
         ): BooleanSelector(),
-        vol.Optional(
-            CONF_HIDE_WRAPPED_ENTITY,
-            default=defaults.get(
-                CONF_HIDE_WRAPPED_ENTITY, DEFAULT_HIDE_WRAPPED_ENTITY
-            ),
-        ): BooleanSelector(),
     }
 
     if _wrapped_can_simulate_position(hass, wrapped_entity_id):
-        simulating = defaults.get(
-            CONF_TIME_BASED_POSITIONING, DEFAULT_TIME_BASED_POSITIONING
-        )
-
+        # The wrapped cover can't report a real position, so simulated
+        # positioning is mandatory (not a user choice) - only its travel
+        # times are configurable.
         schema[
-            vol.Optional(CONF_TIME_BASED_POSITIONING, default=simulating)
+            vol.Optional(
+                CONF_OPEN_DURATION,
+                default=defaults.get(CONF_OPEN_DURATION,
+                                     DEFAULT_OPEN_DURATION),
+            )
+        ] = _duration_selector()
+        schema[
+            vol.Optional(
+                CONF_CLOSE_DURATION,
+                default=defaults.get(CONF_CLOSE_DURATION,
+                                     DEFAULT_CLOSE_DURATION),
+            )
+        ] = _duration_selector()
+        schema[
+            vol.Optional(
+                CONF_SKIP_STOP_AT_LIMITS,
+                default=defaults.get(
+                    CONF_SKIP_STOP_AT_LIMITS, DEFAULT_SKIP_STOP_AT_LIMITS
+                ),
+            )
         ] = BooleanSelector()
-
-        if simulating:
-            schema[
-                vol.Optional(
-                    CONF_OPEN_DURATION,
-                    default=defaults.get(CONF_OPEN_DURATION, DEFAULT_OPEN_DURATION),
-                )
-            ] = _duration_selector()
-            schema[
-                vol.Optional(
-                    CONF_CLOSE_DURATION,
-                    default=defaults.get(CONF_CLOSE_DURATION, DEFAULT_CLOSE_DURATION),
-                )
-            ] = _duration_selector()
-            schema[
-                vol.Optional(
-                    CONF_SKIP_STOP_AT_LIMITS,
-                    default=defaults.get(
-                        CONF_SKIP_STOP_AT_LIMITS, DEFAULT_SKIP_STOP_AT_LIMITS
-                    ),
-                )
-            ] = BooleanSelector()
 
     return schema
 
@@ -208,15 +234,7 @@ class AdvancedCoverConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors = _validate_bounds(user_input)
 
-            # If the user just enabled simulated positioning, the duration
-            # fields weren't part of this submission's schema yet — redisplay
-            # the form with them added instead of creating the entry.
-            revealing_durations = (
-                user_input.get(CONF_TIME_BASED_POSITIONING)
-                and CONF_OPEN_DURATION not in user_input
-            )
-
-            if not errors and not revealing_durations:
+            if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data={
@@ -230,7 +248,8 @@ class AdvancedCoverConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_NAME,
                     default=(user_input or {}).get(
-                        CONF_NAME, _default_name(self.hass, self._wrapped_entity_id)
+                        CONF_NAME, _default_name(
+                            self.hass, self._wrapped_entity_id)
                     ),
                 ): str,
                 **_settings_fields(
@@ -274,12 +293,7 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             errors = _validate_bounds(user_input)
 
-            revealing_durations = (
-                user_input.get(CONF_TIME_BASED_POSITIONING)
-                and CONF_OPEN_DURATION not in user_input
-            )
-
-            if not errors and not revealing_durations:
+            if not errors:
                 return self.async_create_entry(title="", data=user_input)
 
             current = user_input
