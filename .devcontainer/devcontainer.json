@@ -24,7 +24,8 @@
         "runem.lit-plugin",
         "cschleiden.vscode-github-actions",
         "samuelcolvin.jinjahtml",
-        "rvest.vs-code-prettier-eslint"
+        "rvest.vs-code-prettier-eslint",
+        "anthropic.claude-code"
       ],
       "settings": {
         "files.eol": "\n",
