@@ -7,9 +7,10 @@ from typing import Any, Mapping
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_NAME
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     BooleanSelector,
     EntitySelector,
@@ -21,10 +22,12 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_ENFORCE_BOUNDS,
+    CONF_HIDE_WRAPPED_ENTITY,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
     CONF_WRAPPED_ENTITY,
     DEFAULT_ENFORCE_BOUNDS,
+    DEFAULT_HIDE_WRAPPED_ENTITY,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DOMAIN,
@@ -39,12 +42,35 @@ def _percent_selector() -> NumberSelector:
     )
 
 
-def _bounds_fields(defaults: Mapping[str, Any]) -> dict:
+def _own_entity_ids(hass: HomeAssistant) -> list[str]:
+    """Return entity IDs already created by this integration.
+
+    Excluded from the wrapped-entity selector so an Advanced Cover can't wrap
+    another Advanced Cover.
+    """
+
+    registry = er.async_get(hass)
+    return [
+        entity.entity_id
+        for entity in registry.entities.values()
+        if entity.platform == DOMAIN
+    ]
+
+
+def _wrapped_entity_field(hass: HomeAssistant) -> EntitySelector:
+    return EntitySelector(
+        EntitySelectorConfig(domain="cover", exclude_entities=_own_entity_ids(hass))
+    )
+
+
+def _default_name(hass: HomeAssistant, wrapped_entity_id: str) -> str:
+    state = hass.states.get(wrapped_entity_id)
+    friendly_name = state.attributes.get(ATTR_FRIENDLY_NAME) if state else None
+    return f"{friendly_name or wrapped_entity_id} (Advanced)"
+
+
+def _settings_fields(defaults: Mapping[str, Any]) -> dict:
     return {
-        vol.Required(
-            CONF_WRAPPED_ENTITY,
-            description={"suggested_value": defaults.get(CONF_WRAPPED_ENTITY)},
-        ): EntitySelector(EntitySelectorConfig(domain="cover")),
         vol.Optional(
             CONF_MIN_VALUE,
             default=defaults.get(CONF_MIN_VALUE, DEFAULT_MIN_VALUE),
@@ -56,6 +82,12 @@ def _bounds_fields(defaults: Mapping[str, Any]) -> dict:
         vol.Optional(
             CONF_ENFORCE_BOUNDS,
             default=defaults.get(CONF_ENFORCE_BOUNDS, DEFAULT_ENFORCE_BOUNDS),
+        ): BooleanSelector(),
+        vol.Optional(
+            CONF_HIDE_WRAPPED_ENTITY,
+            default=defaults.get(
+                CONF_HIDE_WRAPPED_ENTITY, DEFAULT_HIDE_WRAPPED_ENTITY
+            ),
         ): BooleanSelector(),
     }
 
@@ -71,10 +103,34 @@ class AdvancedCoverConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _wrapped_entity_id: str
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the initial step."""
+        """Handle the wrapped-entity selection step."""
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_WRAPPED_ENTITY])
+            self._abort_if_unique_id_configured()
+
+            self._wrapped_entity_id = user_input[CONF_WRAPPED_ENTITY]
+            return await self.async_step_settings()
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_WRAPPED_ENTITY): _wrapped_entity_field(self.hass),
+            }
+        )
+
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def async_step_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the settings step."""
 
         errors: dict[str, str] = {}
 
@@ -82,24 +138,29 @@ class AdvancedCoverConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = _validate_bounds(user_input)
 
             if not errors:
-                await self.async_set_unique_id(user_input[CONF_WRAPPED_ENTITY])
-                self._abort_if_unique_id_configured()
-
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input[CONF_NAME],
+                    data={
+                        CONF_WRAPPED_ENTITY: self._wrapped_entity_id,
+                        **user_input,
+                    },
                 )
 
         schema = vol.Schema(
             {
                 vol.Required(
                     CONF_NAME,
-                    default=(user_input or {}).get(CONF_NAME, ""),
+                    default=(user_input or {}).get(
+                        CONF_NAME, _default_name(self.hass, self._wrapped_entity_id)
+                    ),
                 ): str,
-                **_bounds_fields(user_input or {}),
+                **_settings_fields(user_input or {}),
             }
         )
 
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="settings", data_schema=schema, errors=errors
+        )
 
     @staticmethod
     @callback
@@ -138,6 +199,6 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(_bounds_fields(current)),
+            data_schema=vol.Schema(_settings_fields(current)),
             errors=errors,
         )

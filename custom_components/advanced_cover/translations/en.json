@@ -4,16 +4,23 @@
       "user": {
         "title": "Add an Advanced Cover",
         "data": {
+          "wrapped_entity": "Cover to wrap"
+        }
+      },
+      "settings": {
+        "title": "Configure the Advanced Cover",
+        "data": {
           "name": "Name",
-          "wrapped_entity": "Cover to wrap",
           "min_value": "Minimum position",
           "max_value": "Maximum position",
-          "enforce_bounds": "Proactively enforce bounds"
+          "enforce_bounds": "Proactively enforce bounds",
+          "hide_wrapped_entity": "Hide the wrapped entity"
         },
         "data_description": {
           "min_value": "The wrapped cover will never be commanded below this position.",
           "max_value": "The wrapped cover will never be commanded above this position.",
-          "enforce_bounds": "If the wrapped cover's current position is outside the bounds when they change, immediately re-command it back within bounds."
+          "enforce_bounds": "If the wrapped cover's current position is outside the bounds when they change, immediately re-command it back within bounds.",
+          "hide_wrapped_entity": "Hide the wrapped cover entity in the Home Assistant UI. It remains fully available to automations and scripts."
         }
       }
     },
@@ -29,15 +36,16 @@
       "init": {
         "title": "Configure an Advanced Cover",
         "data": {
-          "wrapped_entity": "Cover to wrap",
           "min_value": "Minimum position",
           "max_value": "Maximum position",
-          "enforce_bounds": "Proactively enforce bounds"
+          "enforce_bounds": "Proactively enforce bounds",
+          "hide_wrapped_entity": "Hide the wrapped entity"
         },
         "data_description": {
           "min_value": "The wrapped cover will never be commanded below this position.",
           "max_value": "The wrapped cover will never be commanded above this position.",
-          "enforce_bounds": "If the wrapped cover's current position is outside the bounds when they change, immediately re-command it back within bounds."
+          "enforce_bounds": "If the wrapped cover's current position is outside the bounds when they change, immediately re-command it back within bounds.",
+          "hide_wrapped_entity": "Hide the wrapped cover entity in the Home Assistant UI. It remains fully available to automations and scripts."
         }
       }
     },

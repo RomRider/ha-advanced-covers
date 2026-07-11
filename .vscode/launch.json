@@ -18,6 +18,8 @@
       "name": "Python: Attach Local",
       "type": "debugpy",
       "preLaunchTask": "devcontainer: Start HA",
+      "postDebugTask": "devcontainer: stop debug",
+      "justMyCode": true,
       "request": "attach",
       "connect": {
         "port": 5678,
