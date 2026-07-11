@@ -1,10 +1,12 @@
 {
     "domain": "advanced_cover",
     "name": "Advanced Cover",
+    "codeowners": [
+        "@RomRider"
+    ],
     "config_flow": true,
-    "codeowners": ["@RomRider"],
     "documentation": "https://github.com/RomRider/ha-advanced-covers",
-    "issue_tracker": "https://github.com/RomRider/ha-advanced-covers/issues",
     "iot_class": "calculated",
+    "issue_tracker": "https://github.com/RomRider/ha-advanced-covers/issues",
     "version": "1.0.0"
 }
