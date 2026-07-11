@@ -72,25 +72,41 @@ def _own_entity_ids(hass: HomeAssistant) -> list[str]:
     ]
 
 
-def _wrapped_entity_candidates(hass: HomeAssistant) -> list[str]:
-    """Return cover entity IDs that support OPEN, CLOSE, and STOP (all three).
+def _already_wrapped_entity_ids(hass: HomeAssistant) -> list[str]:
+    """Return wrapped entity IDs already claimed by an existing config entry.
 
-    The EntitySelector's declarative `filter.supported_features` can only
-    express "has at least one of these features" (the frontend checks
-    `supported_features & mask != 0`, an overlap test, not containment) -
-    there's no way to require all three through it. So the required feature
-    set is enforced here instead, as an explicit include list the picker
-    filters its rendered options against.
+    Excluded from the wrapped-entity selector so the same cover can't be
+    picked twice - each source cover can only be wrapped once, otherwise
+    caught later (and less helpfully) by the unique_id abort.
     """
 
-    own = set(_own_entity_ids(hass))
+    return [
+        entry.data[CONF_WRAPPED_ENTITY]
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    ]
+
+
+def _wrapped_entity_candidates(hass: HomeAssistant) -> list[str]:
+    """Return cover entity IDs eligible to be wrapped.
+
+    Eligible means: supports OPEN, CLOSE, and STOP (all three - the
+    EntitySelector's declarative `filter.supported_features` can only
+    express "has at least one of these features", since the frontend checks
+    `supported_features & mask != 0`, an overlap test, not containment, so
+    the required feature set is enforced here instead, as an explicit
+    include list the picker filters its rendered options against); not
+    already an Advanced Cover entity itself; and not already wrapped by an
+    existing Advanced Cover entry.
+    """
+
+    excluded = set(_own_entity_ids(hass)) | set(_already_wrapped_entity_ids(hass))
     required = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
     return [
         state.entity_id
         for state in hass.states.async_all(COVER_DOMAIN)
-        if state.entity_id not in own
+        if state.entity_id not in excluded
         and (
             CoverEntityFeature(state.attributes.get(
                 ATTR_SUPPORTED_FEATURES, 0))
