@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine next version
+        id: version
+        uses: paulhatch/semantic-version@v5
+        with:
+          tag_prefix: "v"
+          # Conventional Commits: "feat:" bumps minor, "fix:"/anything else
+          # bumps patch, a "!" before the colon or a "BREAKING CHANGE:"
+          # footer bumps major.
+          major_pattern: '/^\w+(\(.+\))?!:/'
+          major_regexp_flags: ""
+          minor_pattern: '/^feat(\(.+\))?:/'
+          version_format: "${major}.${minor}.${patch}"
+
+      - name: Update manifest.json version
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          python3 - <<'EOF'
+          import json
+          import os
+
+          path = "custom_components/advanced_cover/manifest.json"
+          with open(path) as f:
+              data = json.load(f)
+          data["version"] = os.environ["NEW_VERSION"]
+          with open(path, "w") as f:
+              json.dump(data, f, indent=4)
+              f.write("\n")
+          EOF
+
+      - name: Commit and push version bump
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add custom_components/advanced_cover/manifest.json
+          git commit -m "chore(release): v${NEW_VERSION}"
+          git push
+
+      - name: Tag the release commit
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git tag "v${NEW_VERSION}"
+          git push origin "v${NEW_VERSION}"
+
+      - name: Zip the advanced_cover component
+        # HACS zip-release convention: the asset must be named
+        # <domain>.zip with the component's files at the zip root
+        # (not nested in an advanced_cover/ folder).
+        run: |
+          cd custom_components/advanced_cover
+          zip -r "${GITHUB_WORKSPACE}/advanced_cover.zip" . -x '__pycache__/*'
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v${NEW_VERSION}" \
+            advanced_cover.zip \
+            --title "v${NEW_VERSION}" \
+            --generate-notes
