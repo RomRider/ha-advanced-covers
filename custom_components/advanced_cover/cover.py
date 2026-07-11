@@ -133,7 +133,8 @@ def _resolve_wrapped_area_name(hass: HomeAssistant, wrapped_entity_id: str) -> s
 
     area_id = entity_entry.area_id
     if area_id is None and entity_entry.device_id is not None:
-        device_entry = async_get_device_registry(hass).async_get(entity_entry.device_id)
+        device_entry = async_get_device_registry(
+            hass).async_get(entity_entry.device_id)
         area_id = device_entry.area_id if device_entry is not None else None
 
     if area_id is None:
@@ -141,6 +142,27 @@ def _resolve_wrapped_area_name(hass: HomeAssistant, wrapped_entity_id: str) -> s
 
     area_entry = ar.async_get(hass).async_get_area(area_id)
     return area_entry.name if area_entry is not None else None
+
+
+def _resolve_wrapped_via_device(
+    hass: HomeAssistant, wrapped_entity_id: str
+) -> tuple[str, str] | None:
+    """Return a device identifier for the wrapped entity's device, if any.
+
+    Links this entity's own device to the wrapped entity's device via
+    `via_device`, so the device page shows a "Connected via" cross-link.
+    """
+
+    entity_entry = er.async_get(hass).async_get(wrapped_entity_id)
+    if entity_entry is None or entity_entry.device_id is None:
+        return None
+
+    device_entry = async_get_device_registry(
+        hass).async_get(entity_entry.device_id)
+    if device_entry is None or not device_entry.identifiers:
+        return None
+
+    return next(iter(device_entry.identifiers))
 
 
 class AdvancedCoverEntity(CoverEntity, RestoreEntity):
@@ -201,12 +223,11 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
-            manufacturer="Advanced Cover",
             model="Advanced Cover",
-            entry_type=DeviceEntryType.SERVICE,
-            # One-time default: only applied when this device is first
-            # created, never overrides a subsequent manual area change.
-            suggested_area=_resolve_wrapped_area_name(hass, self._wrapped_entity_id),
+            suggested_area=_resolve_wrapped_area_name(
+                hass, self._wrapped_entity_id),
+            via_device=_resolve_wrapped_via_device(
+                hass, self._wrapped_entity_id),
         )
         self._apply_wrapped_state()
 
@@ -370,7 +391,8 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
         )
         rate = 100.0 / duration
         elapsed = max(0.0, time.monotonic() - self._sim_move_start_time)
-        signed_delta = elapsed * rate * (1 if self._sim_direction == "opening" else -1)
+        signed_delta = elapsed * rate * \
+            (1 if self._sim_direction == "opening" else -1)
         estimated = self._sim_move_start_position + signed_delta
         lo, hi = sorted((self._sim_move_start_position, self._sim_target))
         return min(max(estimated, lo), hi)
@@ -532,7 +554,8 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
                 return
 
             clamped = min(
-                max(self._sim_position, self._effective_min()), self._effective_max()
+                max(self._sim_position, self._effective_min()
+                    ), self._effective_max()
             )
 
             if clamped == self._sim_position:
