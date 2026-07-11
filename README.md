@@ -1,0 +1,72 @@
+# Advanced Cover
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+
+A [Home Assistant](https://www.home-assistant.io/) custom integration that wraps an existing `cover` entity
+and exposes a new "Advanced Cover" entity whose usable position range is clamped to a configurable
+`[min_value, max_value]` window — useful for shades/blinds/awnings where the physical travel range
+shouldn't be fully exposed (e.g. a blind that shouldn't ever close all the way, or an awning that
+shouldn't fully retract).
+
+## Features
+
+- **Bounded positioning** — every commanded position, and open/close, is clamped to a configurable
+  minimum and maximum position before being forwarded to the wrapped cover.
+- **Proactive bounds enforcement** (optional) — if the wrapped cover's position ends up outside the
+  configured bounds (e.g. from an external command), it's automatically re-commanded back within them.
+- **Time-based simulated positioning** — for covers that only support open/close/stop (no native
+  position reporting), Advanced Cover estimates an absolute position from configured open/close travel
+  times, so you still get a position slider and can command percentages. Activates automatically
+  whenever the wrapped cover lacks real positioning support but does support `stop`.
+- **Runtime-adjustable bounds** — three entity services (`set_min_value`, `set_max_value`,
+  `set_enforce_bounds`) let automations change the bounds/enforcement without reloading the integration.
+- **Device grouping** — each Advanced Cover gets its own device, linked (`via_device`) to the wrapped
+  entity's device so the relationship is visible on the device page, and inherits the wrapped entity's
+  area by default.
+- **Optional wrapped-entity hiding** — hide the underlying wrapped cover entity from the UI while
+  keeping it fully available to automations and scripts.
+
+## Installation
+
+### HACS (recommended)
+
+This integration isn't in the default HACS store yet, so add it as a custom repository:
+
+1. In Home Assistant, go to **HACS → Integrations**.
+2. Click the three-dot menu (top right) → **Custom repositories**.
+3. Add `https://github.com/RomRider/ha-advanced-covers` with category **Integration**.
+4. Find **Advanced Cover** in HACS and install it.
+5. Restart Home Assistant.
+
+### Manual
+
+Copy `custom_components/advanced_cover` into your Home Assistant `config/custom_components/` directory,
+then restart Home Assistant.
+
+## Configuration
+
+Configuration is done entirely through the UI:
+
+1. Go to **Settings → Devices & Services → Add Integration**.
+2. Search for **Advanced Cover**.
+3. Pick the `cover` entity to wrap (it must support open, close, and stop).
+4. Configure the name, minimum/maximum position, whether to proactively enforce bounds, whether to hide
+   the wrapped entity, and (only shown when the wrapped cover can't report a real position) the open/close
+   travel times used for simulated positioning.
+
+All of these settings except the wrapped entity itself can be changed later from the integration's
+**Options** without recreating it.
+
+## Services
+
+| Service | Description |
+| --- | --- |
+| `advanced_cover.set_min_value` | Update the minimum position bound at runtime. |
+| `advanced_cover.set_max_value` | Update the maximum position bound at runtime. |
+| `advanced_cover.set_enforce_bounds` | Update the proactive-enforcement setting at runtime. |
+
+See each service's fields in **Developer Tools → Services** for details.
+
+## License
+
+[MIT](LICENSE)
