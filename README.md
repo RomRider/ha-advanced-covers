@@ -14,6 +14,9 @@ It can also simulate a cover’s position for covers that do not natively suppor
 
 <p align="center" style="display: flex; align-items: center; justify-content: center;">
   <img src="./doc/img/01_add_entity.png" alt="Step 1 - Add Advanced Cover integration" width="280" />
+</p>
+
+<p align="center" style="display: flex; align-items: center; justify-content: center;">
   <img src="./doc/img/02_config_01.png" alt="Step 2 - Configure wrapped cover and bounds" width="280" />
   <img src="./doc/img/03_config_02.png" alt="Step 3 - Configure optional behavior" width="280" />
 </p>
