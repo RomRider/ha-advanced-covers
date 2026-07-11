@@ -44,6 +44,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
@@ -53,7 +54,11 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    DeviceEntryType,
+    DeviceInfo,
+    async_get as async_get_device_registry,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -113,6 +118,29 @@ async def async_setup_entry(
         {vol.Required(ATTR_ENFORCE): bool},
         "async_set_enforce_bounds",
     )
+
+
+def _resolve_wrapped_area_name(hass: HomeAssistant, wrapped_entity_id: str) -> str | None:
+    """Return the wrapped entity's area name, falling back to its device's area.
+
+    Used as a one-time suggestion for the Advanced Cover's own device, so it
+    lands in the same area as the cover it wraps by default.
+    """
+
+    entity_entry = er.async_get(hass).async_get(wrapped_entity_id)
+    if entity_entry is None:
+        return None
+
+    area_id = entity_entry.area_id
+    if area_id is None and entity_entry.device_id is not None:
+        device_entry = async_get_device_registry(hass).async_get(entity_entry.device_id)
+        area_id = device_entry.area_id if device_entry is not None else None
+
+    if area_id is None:
+        return None
+
+    area_entry = ar.async_get(hass).async_get_area(area_id)
+    return area_entry.name if area_entry is not None else None
 
 
 class AdvancedCoverEntity(CoverEntity, RestoreEntity):
@@ -176,6 +204,9 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
             manufacturer="Advanced Cover",
             model="Advanced Cover",
             entry_type=DeviceEntryType.SERVICE,
+            # One-time default: only applied when this device is first
+            # created, never overrides a subsequent manual area change.
+            suggested_area=_resolve_wrapped_area_name(hass, self._wrapped_entity_id),
         )
         self._apply_wrapped_state()
 
