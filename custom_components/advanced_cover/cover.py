@@ -53,6 +53,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -73,6 +74,7 @@ from .const import (
     DEFAULT_MIN_VALUE,
     DEFAULT_OPEN_DURATION,
     DEFAULT_SKIP_STOP_AT_LIMITS,
+    DOMAIN,
     SERVICE_SET_ENFORCE_BOUNDS,
     SERVICE_SET_MAX_VALUE,
     SERVICE_SET_MIN_VALUE,
@@ -168,6 +170,13 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
 
         self._attr_unique_id = entry.entry_id
         self._attr_name = entry.title
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=entry.title,
+            manufacturer="Advanced Cover",
+            model="Advanced Cover",
+            entry_type=DeviceEntryType.SERVICE,
+        )
         self._apply_wrapped_state()
 
     async def async_added_to_hass(self) -> None:
