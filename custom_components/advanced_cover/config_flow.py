@@ -29,6 +29,7 @@ from .const import (
     CONF_MIN_VALUE,
     CONF_OPEN_DURATION,
     CONF_SKIP_STOP_AT_LIMITS,
+    CONF_TREAT_MIN_AS_CLOSED,
     CONF_WRAPPED_ENTITY,
     DEFAULT_CLOSE_DURATION,
     DEFAULT_ENFORCE_BOUNDS,
@@ -37,6 +38,7 @@ from .const import (
     DEFAULT_MIN_VALUE,
     DEFAULT_OPEN_DURATION,
     DEFAULT_SKIP_STOP_AT_LIMITS,
+    DEFAULT_TREAT_MIN_AS_CLOSED,
     DOMAIN,
 )
 
@@ -172,6 +174,12 @@ def _settings_fields(
         vol.Optional(
             CONF_ENFORCE_BOUNDS,
             default=defaults.get(CONF_ENFORCE_BOUNDS, DEFAULT_ENFORCE_BOUNDS),
+        ): BooleanSelector(),
+        vol.Optional(
+            CONF_TREAT_MIN_AS_CLOSED,
+            default=defaults.get(
+                CONF_TREAT_MIN_AS_CLOSED, DEFAULT_TREAT_MIN_AS_CLOSED
+            ),
         ): BooleanSelector(),
     }
 

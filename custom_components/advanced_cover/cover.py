@@ -72,6 +72,7 @@ from .const import (
     CONF_MIN_VALUE,
     CONF_OPEN_DURATION,
     CONF_SKIP_STOP_AT_LIMITS,
+    CONF_TREAT_MIN_AS_CLOSED,
     CONF_WRAPPED_ENTITY,
     DEFAULT_CLOSE_DURATION,
     DEFAULT_ENFORCE_BOUNDS,
@@ -79,6 +80,7 @@ from .const import (
     DEFAULT_MIN_VALUE,
     DEFAULT_OPEN_DURATION,
     DEFAULT_SKIP_STOP_AT_LIMITS,
+    DEFAULT_TREAT_MIN_AS_CLOSED,
     DOMAIN,
     SERVICE_SET_ENFORCE_BOUNDS,
     SERVICE_SET_MAX_VALUE,
@@ -202,6 +204,9 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
         self._skip_stop_at_limits = bool(
             config.get(CONF_SKIP_STOP_AT_LIMITS, DEFAULT_SKIP_STOP_AT_LIMITS)
         )
+        self._treat_min_as_closed = bool(
+            config.get(CONF_TREAT_MIN_AS_CLOSED, DEFAULT_TREAT_MIN_AS_CLOSED)
+        )
 
         # The wrapped entity's REAL supported-features bitmask, tracked
         # separately from self._attr_supported_features (which gets a
@@ -245,7 +250,7 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
 
         if self._simulation_enabled():
             self._attr_current_cover_position = round(self._sim_position)
-            self._attr_is_closed = self._sim_position <= 0
+            self._attr_is_closed = self._sim_is_closed()
             await self._maybe_enforce_bounds()
 
         self.async_on_remove(
@@ -324,7 +329,7 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
                 self._attr_current_cover_position = round(self._sim_position)
                 self._attr_is_opening = False
                 self._attr_is_closing = False
-                self._attr_is_closed = self._sim_position <= 0
+                self._attr_is_closed = self._sim_is_closed()
             return
 
         self._attr_current_cover_position = state.attributes.get(
@@ -333,7 +338,13 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
         self._attr_is_opening = state.state == STATE_OPENING
         self._attr_is_closing = state.state == STATE_CLOSING
 
-        if state.state == STATE_CLOSED:
+        if (
+            self._treat_min_as_closed
+            and self._attr_current_cover_position is not None
+            and self._attr_current_cover_position <= self._effective_min()
+        ):
+            self._attr_is_closed = True
+        elif state.state == STATE_CLOSED:
             self._attr_is_closed = True
         elif state.state == STATE_OPEN:
             self._attr_is_closed = False
@@ -347,6 +358,17 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
 
     def _effective_max(self) -> float:
         return self._max_value
+
+    def _sim_is_closed(self) -> bool:
+        """Whether the current simulated position should report as closed.
+
+        Normally only an exact 0. When `treat_min_as_closed` is enabled, any
+        position at or below the configured lower bound also counts.
+        """
+
+        if self._treat_min_as_closed:
+            return self._sim_position <= self._effective_min()
+        return self._sim_position <= 0
 
     def _is_at_position(self, target: float) -> bool:
         return (
@@ -415,7 +437,7 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
         self._attr_current_cover_position = round(self._sim_position)
         self._attr_is_opening = False
         self._attr_is_closing = False
-        self._attr_is_closed = self._sim_position <= 0
+        self._attr_is_closed = self._sim_is_closed()
 
     @callback
     def _sim_tick(self, _now: datetime | None = None) -> None:
@@ -439,7 +461,7 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
         self._attr_current_cover_position = round(self._sim_position)
         self._attr_is_opening = False
         self._attr_is_closing = False
-        self._attr_is_closed = self._sim_position <= 0
+        self._attr_is_closed = self._sim_is_closed()
         self.async_write_ha_state()
 
         # A move that finished exactly at 0 or 100 ran the wrapped cover all
@@ -520,6 +542,7 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
             CONF_MIN_VALUE: self._effective_min(),
             CONF_MAX_VALUE: self._effective_max(),
             CONF_ENFORCE_BOUNDS: self._enforce_bounds,
+            CONF_TREAT_MIN_AS_CLOSED: self._treat_min_as_closed,
             CONF_WRAPPED_ENTITY: self._wrapped_entity_id,
             ATTR_SIMULATED_POSITION: simulating,
         }
