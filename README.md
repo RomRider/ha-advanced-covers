@@ -8,6 +8,18 @@ and exposes a new "Advanced Cover" entity whose usable position range is clamped
 shouldn't be fully exposed (e.g. a blind that shouldn't ever close all the way, or an awning that
 shouldn't fully retract).
 
+It can also simulate a cover’s position for covers that do not natively support setting a position. This is based on the time it takes to go from fully closed to fully opened and fully open to fully closed.
+
+## Configuration options
+
+<p align="center" style="display: flex; align-items: center; justify-content: center;">
+  <img src="./doc/img/01_add_entity.png" alt="Step 1 - Add Advanced Cover integration" width="280" />
+  <img src="./doc/img/02_config_01.png" alt="Step 2 - Configure wrapped cover and bounds" width="280" />
+  <img src="./doc/img/03_config_02.png" alt="Step 3 - Configure optional behavior" width="280" />
+</p>
+
+<p align="center"><em>Setup flow: add integration → configure bounds + configure optional behavior.</em></p>
+
 ## Features
 
 - **Bounded positioning** — every commanded position, and open/close, is clamped to a configurable
@@ -64,10 +76,10 @@ All of these settings except the wrapped entity itself can be changed later from
 
 ## Services
 
-| Service | Description |
-| --- | --- |
-| `advanced_cover.set_min_value` | Update the minimum position bound at runtime. |
-| `advanced_cover.set_max_value` | Update the maximum position bound at runtime. |
+| Service                             | Description                                          |
+| ----------------------------------- | ---------------------------------------------------- |
+| `advanced_cover.set_min_value`      | Update the minimum position bound at runtime.        |
+| `advanced_cover.set_max_value`      | Update the maximum position bound at runtime.        |
 | `advanced_cover.set_enforce_bounds` | Update the proactive-enforcement setting at runtime. |
 
 See each service's fields in **Developer Tools → Services** for details.

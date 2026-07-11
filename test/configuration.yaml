@@ -20,7 +20,7 @@ input_boolean:
 
 template:
   - cover:
-      - device_class: shade
+      - device_class: shutter
         open_cover:
           - target:
               entity_id:
@@ -38,7 +38,8 @@ template:
             action: system_log.write
         default_entity_id: cover.fake_shade_no_position
         state: "{{ is_state('input_boolean.fake_shade_is_open', 'on') }}"
-        name: fake_shade_no_position
+        name: Shutter with no position support
+        unique_id: fake_shade_no_position
 
       - device_class: shade
         open_cover:
@@ -53,4 +54,5 @@ template:
             action: input_boolean.turn_off
         default_entity_id: cover.fake_shade_no_stop
         state: "{{ is_state('input_boolean.fake_shade_is_open', 'on') }}"
-        name: fake_shade_no_stop
+        name: Shutter with no stop support
+        unique_id: fake_shade_no_stop
