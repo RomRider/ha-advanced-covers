@@ -30,7 +30,12 @@ shouldn't fully retract).
 
 ### HACS (recommended)
 
-This integration isn't in the default HACS store yet, so add it as a custom repository:
+This integration isn't in the default HACS store yet, so it needs to be added as a custom repository —
+the button below does that automatically:
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=RomRider&repository=ha-advanced-covers&category=integration)
+
+Or manually:
 
 1. In Home Assistant, go to **HACS → Integrations**.
 2. Click the three-dot menu (top right) → **Custom repositories**.
