@@ -1,0 +1,88 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add an Advanced Cover",
+        "data": {
+          "name": "Name",
+          "wrapped_entity": "Cover to wrap",
+          "min_value": "Minimum position",
+          "max_value": "Maximum position",
+          "enforce_bounds": "Proactively enforce bounds"
+        },
+        "data_description": {
+          "min_value": "The wrapped cover will never be commanded below this position.",
+          "max_value": "The wrapped cover will never be commanded above this position.",
+          "enforce_bounds": "If the wrapped cover's current position is outside the bounds when they change, immediately re-command it back within bounds."
+        }
+      }
+    },
+    "error": {
+      "min_greater_than_max": "Minimum position must not be greater than maximum position."
+    },
+    "abort": {
+      "already_configured": "This cover is already wrapped by an Advanced Cover."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Advanced Cover",
+        "data": {
+          "wrapped_entity": "Cover to wrap",
+          "min_value": "Minimum position",
+          "max_value": "Maximum position",
+          "enforce_bounds": "Proactively enforce bounds"
+        },
+        "data_description": {
+          "min_value": "The wrapped cover will never be commanded below this position.",
+          "max_value": "The wrapped cover will never be commanded above this position.",
+          "enforce_bounds": "If the wrapped cover's current position is outside the bounds when they change, immediately re-command it back within bounds."
+        }
+      }
+    },
+    "error": {
+      "min_greater_than_max": "Minimum position must not be greater than maximum position."
+    }
+  },
+  "services": {
+    "set_min_value": {
+      "name": "Set minimum position",
+      "description": "Update an Advanced Cover's minimum position bound at runtime, without reconfiguring the integration.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "The new minimum position (0-100)."
+        },
+        "enforce": {
+          "name": "Enforce",
+          "description": "Override the entity's configured proactive-enforcement setting for this call only. Leave unset to use the entity's default, set to true to force an immediate re-clamp, or false to skip it."
+        }
+      }
+    },
+    "set_max_value": {
+      "name": "Set maximum position",
+      "description": "Update an Advanced Cover's maximum position bound at runtime, without reconfiguring the integration.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "The new maximum position (0-100)."
+        },
+        "enforce": {
+          "name": "Enforce",
+          "description": "Override the entity's configured proactive-enforcement setting for this call only. Leave unset to use the entity's default, set to true to force an immediate re-clamp, or false to skip it."
+        }
+      }
+    },
+    "set_enforce_bounds": {
+      "name": "Set enforce bounds",
+      "description": "Update an Advanced Cover's proactive-enforcement setting at runtime, without reconfiguring the integration.",
+      "fields": {
+        "enforce": {
+          "name": "Enforce",
+          "description": "Whether the wrapped cover should be proactively re-clamped whenever it ends up outside the configured bounds."
+        }
+      }
+    }
+  }
+}

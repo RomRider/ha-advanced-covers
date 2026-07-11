@@ -4,7 +4,7 @@
     {
       "type": "shell",
       "label": "devcontainer: Start HA",
-      "command": "echo 'Starting Home Assistant' && sh -c 'container start'",
+      "command": "echo 'Starting Home Assistant' && sh -c 'container start-debug'",
       "problemMatcher": {
         "pattern": [
           {
@@ -16,7 +16,7 @@
         ],
         "background": {
           "activeOnStart": true,
-          "beginsPattern": ".",
+          "beginsPattern": "5678$",
           "endsPattern": "."
         }
       },

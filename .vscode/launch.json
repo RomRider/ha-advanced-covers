@@ -17,7 +17,7 @@
     {
       "name": "Python: Attach Local",
       "type": "debugpy",
-      // "preLaunchTask": "devcontainer: Start HA",
+      "preLaunchTask": "devcontainer: Start HA",
       "request": "attach",
       "connect": {
         "port": 5678,
@@ -30,15 +30,5 @@
         }
       ]
     }
-    // {
-    //   "name": "Debug Home Assistant",
-    //   "type": "debugpy",
-    //   "request": "launch",
-    //   "envFile": "/home/vscode/.local/ha-venv/bin/activate",
-    //   "python": "/home/vscode/.local/ha-venv/bin/python",
-    //   "module": "homeassistant",
-    //   "justMyCode": false,
-    //   "args": ["--debug", "-c", "/config"]
-    // }
   ]
 }
