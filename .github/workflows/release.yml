@@ -62,10 +62,24 @@ jobs:
           repository = os.environ["REPOSITORY"]
 
           commit_range = f"{previous_commit}..HEAD" if previous_commit else "HEAD"
-          subjects = subprocess.run(
-              ["git", "log", commit_range, "--no-merges", "--pretty=format:%s"],
+          raw_commits = subprocess.run(
+              ["git", "log", commit_range, "--no-merges", "--pretty=format:%H%x1f%s"],
               capture_output=True, text=True, check=True,
           ).stdout.splitlines()
+          commits = [line.partition("\x1f")[::2] for line in raw_commits if line]
+
+          PR_SUFFIX = re.compile(r"\s*\(#(\d+)\)\s*$")
+
+          def commit_link(sha, subject):
+              pr_match = PR_SUFFIX.search(subject)
+              if pr_match:
+                  pr_number = pr_match.group(1)
+                  stripped_subject = subject[: pr_match.start()]
+                  link = f"[#{pr_number}](https://github.com/{repository}/pull/{pr_number})"
+              else:
+                  stripped_subject = subject
+                  link = f"[{sha[:7]}](https://github.com/{repository}/commit/{sha})"
+              return stripped_subject, link
 
           SECTION_ORDER = [
               "breaking", "feat", "fix", "perf", "refactor", "docs", "chore", "other",
@@ -85,18 +99,24 @@ jobs:
           sections = {key: [] for key in SECTION_ORDER}
           pattern = re.compile(r"^(\w+)(\(([^)]+)\))?(!)?:\s*(.+)$")
 
-          for subject in subjects:
+          for sha, subject in commits:
               subject = subject.strip()
               if not subject or re.match(r"^chore\(release\):", subject):
                   continue
 
+              subject, link = commit_link(sha, subject)
+
               match = pattern.match(subject)
               if not match:
-                  sections["other"].append(f"- {subject}")
+                  sections["other"].append(f"- {subject} ({link})")
                   continue
 
               commit_type, _, scope, breaking, description = match.groups()
-              bullet = f"- **{scope}:** {description}" if scope else f"- {description}"
+              bullet = (
+                  f"- **{scope}:** {description} ({link})"
+                  if scope
+                  else f"- {description} ({link})"
+              )
 
               if breaking:
                   sections["breaking"].append(bullet)
