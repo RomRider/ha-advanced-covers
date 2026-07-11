@@ -64,7 +64,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     ATTR_ENFORCE,
     ATTR_MOVE_IN_PROGRESS,
-    ATTR_SIMULATING,
+    ATTR_SIMULATED_POSITION,
     ATTR_VALUE,
     CONF_CLOSE_DURATION,
     CONF_ENFORCE_BOUNDS,
@@ -515,17 +515,18 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Expose the wrapped entity, bounds, enforcement, and simulation settings."""
 
+        simulating = self._simulation_enabled()
         attrs = {
             CONF_MIN_VALUE: self._effective_min(),
             CONF_MAX_VALUE: self._effective_max(),
             CONF_ENFORCE_BOUNDS: self._enforce_bounds,
             CONF_WRAPPED_ENTITY: self._wrapped_entity_id,
-            CONF_OPEN_DURATION: self._open_duration,
-            CONF_CLOSE_DURATION: self._close_duration,
-            CONF_SKIP_STOP_AT_LIMITS: self._skip_stop_at_limits,
-            ATTR_SIMULATING: self._simulation_enabled(),
+            ATTR_SIMULATED_POSITION: simulating,
         }
-        if self._simulation_enabled():
+        if simulating:
+            attrs[CONF_OPEN_DURATION] = self._open_duration
+            attrs[CONF_CLOSE_DURATION] = self._close_duration
+            attrs[CONF_SKIP_STOP_AT_LIMITS] = self._skip_stop_at_limits
             attrs[ATTR_MOVE_IN_PROGRESS] = self._sim_move_active()
         return attrs
 

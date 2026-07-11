@@ -25,5 +25,5 @@ SERVICE_SET_ENFORCE_BOUNDS = "set_enforce_bounds"
 
 ATTR_VALUE = "value"
 ATTR_ENFORCE = "enforce"
-ATTR_SIMULATING = "simulating"
+ATTR_SIMULATED_POSITION = "simulated_position"
 ATTR_MOVE_IN_PROGRESS = "move_in_progress"
