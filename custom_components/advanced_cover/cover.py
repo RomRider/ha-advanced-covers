@@ -110,10 +110,10 @@ async def async_setup_entry(
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
-        SERVICE_SET_MIN_VALUE, value_schema, "async_set_min_value"
+        SERVICE_SET_MIN_VALUE, value_schema, "async_set_min_position"
     )
     platform.async_register_entity_service(
-        SERVICE_SET_MAX_VALUE, value_schema, "async_set_max_value"
+        SERVICE_SET_MAX_VALUE, value_schema, "async_set_max_position"
     )
     platform.async_register_entity_service(
         SERVICE_SET_ENFORCE_BOUNDS,
@@ -706,7 +706,7 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
             {ATTR_TILT_POSITION: kwargs[ATTR_TILT_POSITION]},
         )
 
-    async def async_set_min_value(
+    async def async_set_min_position(
         self, value: float, enforce: bool | None = None
     ) -> None:
         """Update the minimum position bound at runtime."""
@@ -719,7 +719,7 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
         self.async_write_ha_state()
         await self._maybe_enforce_bounds(enforce)
 
-    async def async_set_max_value(
+    async def async_set_max_position(
         self, value: float, enforce: bool | None = None
     ) -> None:
         """Update the maximum position bound at runtime."""

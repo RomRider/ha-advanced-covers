@@ -1,4 +1,4 @@
-set_min_value:
+set_min_position:
   target:
     entity:
       domain: cover
@@ -18,7 +18,7 @@ set_min_value:
       selector:
         boolean:
 
-set_max_value:
+set_max_position:
   target:
     entity:
       domain: cover

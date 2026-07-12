@@ -29,14 +29,14 @@ It can also simulate a cover’s position for covers that do not natively suppor
 ## ✨ Features
 
 - 🎯 **Bounded positioning** — every commanded position, and open/close, is clamped to a configurable
-  minimum and maximum position before being forwarded to the wrapped cover. The bounds can be updated through actions (`advanced_cover.set_min_value`, `advanced_cover.set_max_value`, see [below](#️-services))
+  minimum and maximum position before being forwarded to the wrapped cover. The bounds can be updated through actions (`advanced_cover.set_min_position`, `advanced_cover.set_max_position`, see [below](#️-services))
 - 🛡️ **Proactive bounds enforcement** (optional) — if the wrapped cover's position ends up outside the
   configured bounds (e.g. from an external command), it's automatically re-commanded back within them.
 - ⏱️ **Time-based simulated positioning** — for covers that only support open/close/stop (no native
   position reporting), Advanced Cover estimates an absolute position from configured open/close travel
   times, so you still get a position slider and can command percentages. Activates automatically
   whenever the wrapped cover lacks real positioning support but does support `stop`.
-- 🔧 **Runtime-adjustable bounds** — three entity services (`set_min_value`, `set_max_value`,
+- 🔧 **Runtime-adjustable bounds** — three entity services (`set_min_position`, `set_max_position`,
   `set_enforce_bounds`) let automations change the bounds/enforcement without reloading the integration.
 - 🔗 **Device grouping** — each Advanced Cover gets its own device, linked (`via_device`) to the wrapped
   entity's device so the relationship is visible on the device page, and inherits the wrapped entity's
@@ -83,13 +83,70 @@ Configuration is done entirely through the UI:
 
 ## 🛎️ Services
 
+All three services target one or more `advanced_cover`-provided `cover.*` entities and persist the change into
+the config entry's options (so it survives a restart, and shows up in **Options** too). They apply immediately —
+no reload needed.
+
 | Service                             | Description                                          |
 | ----------------------------------- | ---------------------------------------------------- |
-| `advanced_cover.set_min_value`      | Update the minimum position bound at runtime.        |
-| `advanced_cover.set_max_value`      | Update the maximum position bound at runtime.        |
+| `advanced_cover.set_min_position`   | Update the minimum position bound at runtime.        |
+| `advanced_cover.set_max_position`   | Update the maximum position bound at runtime.        |
 | `advanced_cover.set_enforce_bounds` | Update the proactive-enforcement setting at runtime. |
 
-See each service's fields in **Developer Tools → Services** for details.
+### `advanced_cover.set_min_position`
+
+Updates the minimum position bound.
+
+| Parameter | Required | Type           | Description                                                                                                                                                                      |
+| --------- | -------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `value`   | Yes      | number (0-100) | The new minimum position.                                                                                                                                                        |
+| `enforce` | No       | boolean        | Overrides the entity's configured proactive-enforcement setting for this call only. Omit to use the entity's default, `true` to force an immediate re-clamp, `false` to skip it. |
+
+```yaml
+action: advanced_cover.set_min_position
+target:
+  entity_id: cover.living_room_blind
+data:
+  value: 10
+  enforce: true
+```
+
+### `advanced_cover.set_max_position`
+
+Updates the maximum position bound.
+
+| Parameter | Required | Type           | Description                                                                                                                                                                      |
+| --------- | -------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `value`   | Yes      | number (0-100) | The new maximum position.                                                                                                                                                        |
+| `enforce` | No       | boolean        | Overrides the entity's configured proactive-enforcement setting for this call only. Omit to use the entity's default, `true` to force an immediate re-clamp, `false` to skip it. |
+
+```yaml
+action: advanced_cover.set_max_position
+target:
+  entity_id: cover.living_room_blind
+data:
+  value: 90
+```
+
+### `advanced_cover.set_enforce_bounds`
+
+Updates the proactive-enforcement setting.
+
+| Parameter | Required | Type    | Description                                                                                  |
+| --------- | -------- | ------- | -------------------------------------------------------------------------------------------- |
+| `enforce` | Yes      | boolean | Whether the wrapped cover should be proactively re-clamped whenever it's outside the bounds. |
+
+```yaml
+action: advanced_cover.set_enforce_bounds
+target:
+  entity_id: cover.living_room_blind
+data:
+  enforce: false
+```
+
+> [!TIP]
+> `target` also accepts `area_id`/`device_id`, and any of these services can be called on multiple Advanced
+> Cover entities at once by listing several `entity_id`s.
 
 ## 📄 License
 

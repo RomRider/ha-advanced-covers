@@ -21,8 +21,8 @@ DEFAULT_CLOSE_DURATION = 20
 DEFAULT_SKIP_STOP_AT_LIMITS = True
 DEFAULT_TREAT_MIN_AS_CLOSED = False
 
-SERVICE_SET_MIN_VALUE = "set_min_value"
-SERVICE_SET_MAX_VALUE = "set_max_value"
+SERVICE_SET_MIN_VALUE = "set_min_position"
+SERVICE_SET_MAX_VALUE = "set_max_position"
 SERVICE_SET_ENFORCE_BOUNDS = "set_enforce_bounds"
 
 ATTR_VALUE = "value"

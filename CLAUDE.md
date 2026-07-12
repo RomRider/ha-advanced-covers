@@ -71,7 +71,7 @@ The integration has four files of real logic; the big picture only becomes clear
   - Clamps every commanded position/open/close to `[min_value, max_value]` before forwarding the corresponding
     service call to the wrapped entity (`_async_call_wrapped`); tilt commands pass through unclamped.
   - Registers three entity services for runtime reconfiguration without reloading the integration:
-    `set_min_value`, `set_max_value`, `set_enforce_bounds` (schemas in `services.yaml`, descriptions in
+    `set_min_position`, `set_max_position`, `set_enforce_bounds` (schemas in `services.yaml`, descriptions in
     `translations/en.json`). These persist back into `entry.options` via `async_update_entry`.
   - `enforce_bounds`, when on, proactively re-commands the wrapped cover back within bounds
     (`_maybe_enforce_bounds`) whenever its position is observed outside them (e.g. after an external command), as

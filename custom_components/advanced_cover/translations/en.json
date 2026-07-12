@@ -70,7 +70,7 @@
     }
   },
   "services": {
-    "set_min_value": {
+    "set_min_position": {
       "name": "Set minimum position",
       "description": "Update an Advanced Cover's minimum position bound at runtime, without reconfiguring the integration.",
       "fields": {
@@ -84,7 +84,7 @@
         }
       }
     },
-    "set_max_value": {
+    "set_max_position": {
       "name": "Set maximum position",
       "description": "Update an Advanced Cover's maximum position bound at runtime, without reconfiguring the integration.",
       "fields": {
