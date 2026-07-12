@@ -30,10 +30,30 @@
           "close_duration": "Time in seconds for the wrapped cover to travel from fully open (100%) to fully closed (0%).",
           "skip_stop_at_limits": "If a simulated move finishes at 0% or 100%, don't send an explicit stop command - assume the wrapped cover's hardware limit switch already stopped it. A move that finishes at any other bound always sends the stop command."
         }
+      },
+      "tilt_settings": {
+        "title": "Configure tilt bounds",
+        "data": {
+          "min_tilt_value": "Minimum tilt position",
+          "max_tilt_value": "Maximum tilt position",
+          "enforce_tilt_bounds": "Proactively enforce tilt bounds",
+          "open_tilt_duration": "Full open tilt travel time",
+          "close_tilt_duration": "Full close tilt travel time",
+          "skip_stop_at_tilt_limits": "Rely on the cover's own tilt endstop at full open/close"
+        },
+        "data_description": {
+          "min_tilt_value": "The wrapped cover's tilt will never be commanded below this position.",
+          "max_tilt_value": "The wrapped cover's tilt will never be commanded above this position.",
+          "enforce_tilt_bounds": "If the wrapped cover's current tilt position is outside the bounds when they change, immediately re-command it back within bounds.",
+          "open_tilt_duration": "Only shown when the wrapped cover doesn't support precise tilt positioning: time in seconds for its tilt to travel from fully closed (0%) to fully open (100%). This Advanced Cover simulates its tilt position from elapsed travel time in that case.",
+          "close_tilt_duration": "Time in seconds for the wrapped cover's tilt to travel from fully open (100%) to fully closed (0%).",
+          "skip_stop_at_tilt_limits": "If a simulated tilt move finishes at 0% or 100%, don't send an explicit stop command - assume the wrapped cover's hardware limit switch already stopped it. A move that finishes at any other bound always sends the stop command."
+        }
       }
     },
     "error": {
-      "min_greater_than_max": "Minimum position must not be greater than maximum position."
+      "min_greater_than_max": "Minimum position must not be greater than maximum position.",
+      "min_tilt_greater_than_max_tilt": "Minimum tilt position must not be greater than maximum tilt position."
     },
     "abort": {
       "already_configured": "This cover is already wrapped by an Advanced Cover."
@@ -63,10 +83,30 @@
           "close_duration": "Time in seconds for the wrapped cover to travel from fully open (100%) to fully closed (0%).",
           "skip_stop_at_limits": "If a simulated move finishes at 0% or 100%, don't send an explicit stop command - assume the wrapped cover's hardware limit switch already stopped it. A move that finishes at any other bound always sends the stop command."
         }
+      },
+      "tilt_settings": {
+        "title": "Configure tilt bounds",
+        "data": {
+          "min_tilt_value": "Minimum tilt position",
+          "max_tilt_value": "Maximum tilt position",
+          "enforce_tilt_bounds": "Proactively enforce tilt bounds",
+          "open_tilt_duration": "Full open tilt travel time",
+          "close_tilt_duration": "Full close tilt travel time",
+          "skip_stop_at_tilt_limits": "Rely on the cover's own tilt endstop at full open/close"
+        },
+        "data_description": {
+          "min_tilt_value": "The wrapped cover's tilt will never be commanded below this position.",
+          "max_tilt_value": "The wrapped cover's tilt will never be commanded above this position.",
+          "enforce_tilt_bounds": "If the wrapped cover's current tilt position is outside the bounds when they change, immediately re-command it back within bounds.",
+          "open_tilt_duration": "Only shown when the wrapped cover doesn't support precise tilt positioning: time in seconds for its tilt to travel from fully closed (0%) to fully open (100%). This Advanced Cover simulates its tilt position from elapsed travel time in that case.",
+          "close_tilt_duration": "Time in seconds for the wrapped cover's tilt to travel from fully open (100%) to fully closed (0%).",
+          "skip_stop_at_tilt_limits": "If a simulated tilt move finishes at 0% or 100%, don't send an explicit stop command - assume the wrapped cover's hardware limit switch already stopped it. A move that finishes at any other bound always sends the stop command."
+        }
       }
     },
     "error": {
-      "min_greater_than_max": "Minimum position must not be greater than maximum position."
+      "min_greater_than_max": "Minimum position must not be greater than maximum position.",
+      "min_tilt_greater_than_max_tilt": "Minimum tilt position must not be greater than maximum tilt position."
     }
   },
   "services": {
@@ -105,6 +145,44 @@
         "enforce": {
           "name": "Enforce",
           "description": "Whether the wrapped cover should be proactively re-clamped whenever it ends up outside the configured bounds."
+        }
+      }
+    },
+    "set_min_tilt_position": {
+      "name": "Set minimum tilt position",
+      "description": "Update an Advanced Cover's minimum tilt position bound at runtime, without reconfiguring the integration.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "The new minimum tilt position (0-100)."
+        },
+        "enforce": {
+          "name": "Enforce",
+          "description": "Override the entity's configured proactive tilt-enforcement setting for this call only. Leave unset to use the entity's default, set to true to force an immediate re-clamp, or false to skip it."
+        }
+      }
+    },
+    "set_max_tilt_position": {
+      "name": "Set maximum tilt position",
+      "description": "Update an Advanced Cover's maximum tilt position bound at runtime, without reconfiguring the integration.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "The new maximum tilt position (0-100)."
+        },
+        "enforce": {
+          "name": "Enforce",
+          "description": "Override the entity's configured proactive tilt-enforcement setting for this call only. Leave unset to use the entity's default, set to true to force an immediate re-clamp, or false to skip it."
+        }
+      }
+    },
+    "set_enforce_tilt_bounds": {
+      "name": "Set enforce tilt bounds",
+      "description": "Update an Advanced Cover's proactive tilt-enforcement setting at runtime, without reconfiguring the integration.",
+      "fields": {
+        "enforce": {
+          "name": "Enforce",
+          "description": "Whether the wrapped cover's tilt should be proactively re-clamped whenever it ends up outside the configured tilt bounds."
         }
       }
     }

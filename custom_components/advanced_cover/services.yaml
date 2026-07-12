@@ -49,3 +49,55 @@ set_enforce_bounds:
       example: true
       selector:
         boolean:
+
+set_min_tilt_position:
+  target:
+    entity:
+      domain: cover
+      integration: advanced_cover
+  fields:
+    value:
+      required: true
+      example: 10
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    enforce:
+      required: false
+      example: true
+      selector:
+        boolean:
+
+set_max_tilt_position:
+  target:
+    entity:
+      domain: cover
+      integration: advanced_cover
+  fields:
+    value:
+      required: true
+      example: 90
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    enforce:
+      required: false
+      example: true
+      selector:
+        boolean:
+
+set_enforce_tilt_bounds:
+  target:
+    entity:
+      domain: cover
+      integration: advanced_cover
+  fields:
+    enforce:
+      required: true
+      example: true
+      selector:
+        boolean:
