@@ -115,6 +115,10 @@
     "unlock": {
       "name": "Unlock",
       "description": "Unlock an Advanced Cover, restoring normal command handling."
+    },
+    "toggle_lock": {
+      "name": "Toggle lock",
+      "description": "Toggle an Advanced Cover's locked state."
     }
   }
 }

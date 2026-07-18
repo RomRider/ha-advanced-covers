@@ -28,6 +28,7 @@ SERVICE_SET_MAX_VALUE = "set_max_position"
 SERVICE_SET_ENFORCE_BOUNDS = "set_enforce_bounds"
 SERVICE_LOCK = "lock"
 SERVICE_UNLOCK = "unlock"
+SERVICE_TOGGLE_LOCK = "toggle_lock"
 
 ATTR_VALUE = "value"
 ATTR_ENFORCE = "enforce"

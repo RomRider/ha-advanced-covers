@@ -88,6 +88,7 @@ from .const import (
     SERVICE_SET_ENFORCE_BOUNDS,
     SERVICE_SET_MAX_VALUE,
     SERVICE_SET_MIN_VALUE,
+    SERVICE_TOGGLE_LOCK,
     SERVICE_UNLOCK,
 )
 
@@ -126,6 +127,9 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(SERVICE_LOCK, {}, "async_lock")
     platform.async_register_entity_service(SERVICE_UNLOCK, {}, "async_unlock")
+    platform.async_register_entity_service(
+        SERVICE_TOGGLE_LOCK, {}, "async_toggle_lock"
+    )
 
 
 def _resolve_wrapped_area_name(hass: HomeAssistant, wrapped_entity_id: str) -> str | None:
@@ -797,3 +801,11 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
             options={**self._entry.options, CONF_LOCKED: False},
         )
         self.async_write_ha_state()
+
+    async def async_toggle_lock(self) -> None:
+        """Toggle the locked state."""
+
+        if self._locked:
+            await self.async_unlock()
+        else:
+            await self.async_lock()

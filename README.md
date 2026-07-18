@@ -38,8 +38,8 @@ It can also simulate a cover’s position for covers that do not natively suppor
   whenever the wrapped cover lacks real positioning support but does support `stop`.
 - 🔧 **Runtime-adjustable bounds** — three entity services (`set_min_position`, `set_max_position`,
   `set_enforce_bounds`) let automations change the bounds/enforcement without reloading the integration.
-- 🔒 **Lockable** — the `lock`/`unlock` entity services block all open/close/position/tilt/stop commands
-  on the Advanced Cover until it's unlocked again; the current state is exposed as a `locked` attribute.
+- 🔒 **Lockable** — the `lock`/`unlock`/`toggle_lock` entity services block all open/close/position/tilt/stop
+  commands on the Advanced Cover until it's unlocked again; the current state is exposed as a `locked` attribute.
 - 🔗 **Device grouping** — each Advanced Cover gets its own device, linked (`via_device`) to the wrapped
   entity's device so the relationship is visible on the device page, and inherits the wrapped entity's
   area by default.
@@ -85,7 +85,7 @@ Configuration is done entirely through the UI:
 
 ## 🛎️ Services
 
-All five services target one or more `advanced_cover`-provided `cover.*` entities and persist the change into
+All six services target one or more `advanced_cover`-provided `cover.*` entities and persist the change into
 the config entry's options (so it survives a restart, and shows up in **Options** too). They apply immediately —
 no reload needed.
 
@@ -96,6 +96,7 @@ no reload needed.
 | `advanced_cover.set_enforce_bounds` | Update the proactive-enforcement setting at runtime. |
 | `advanced_cover.lock`               | Lock the cover, blocking all commands.               |
 | `advanced_cover.unlock`             | Unlock the cover, restoring normal command handling. |
+| `advanced_cover.toggle_lock`        | Toggle the cover's locked state.                     |
 
 ### `advanced_cover.set_min_position`
 
@@ -165,6 +166,16 @@ Unlocks the cover, restoring normal command handling. Takes no parameters.
 
 ```yaml
 action: advanced_cover.unlock
+target:
+  entity_id: cover.living_room_blind
+```
+
+### `advanced_cover.toggle_lock`
+
+Toggles the cover's locked state. Takes no parameters.
+
+```yaml
+action: advanced_cover.toggle_lock
 target:
   entity_id: cover.living_room_blind
 ```
