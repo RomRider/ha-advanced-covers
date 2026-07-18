@@ -107,6 +107,14 @@
           "description": "Whether the wrapped cover should be proactively re-clamped whenever it ends up outside the configured bounds."
         }
       }
+    },
+    "lock": {
+      "name": "Lock",
+      "description": "Lock an Advanced Cover, blocking all open, close, position, tilt, and stop commands until it is unlocked."
+    },
+    "unlock": {
+      "name": "Unlock",
+      "description": "Unlock an Advanced Cover, restoring normal command handling."
     }
   }
 }

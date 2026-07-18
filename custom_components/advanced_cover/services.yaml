@@ -49,3 +49,15 @@ set_enforce_bounds:
       example: true
       selector:
         boolean:
+
+lock:
+  target:
+    entity:
+      domain: cover
+      integration: advanced_cover
+
+unlock:
+  target:
+    entity:
+      domain: cover
+      integration: advanced_cover

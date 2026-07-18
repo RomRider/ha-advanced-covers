@@ -68,6 +68,7 @@ from .const import (
     ATTR_VALUE,
     CONF_CLOSE_DURATION,
     CONF_ENFORCE_BOUNDS,
+    CONF_LOCKED,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
     CONF_OPEN_DURATION,
@@ -76,15 +77,18 @@ from .const import (
     CONF_WRAPPED_ENTITY,
     DEFAULT_CLOSE_DURATION,
     DEFAULT_ENFORCE_BOUNDS,
+    DEFAULT_LOCKED,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_OPEN_DURATION,
     DEFAULT_SKIP_STOP_AT_LIMITS,
     DEFAULT_TREAT_MIN_AS_CLOSED,
     DOMAIN,
+    SERVICE_LOCK,
     SERVICE_SET_ENFORCE_BOUNDS,
     SERVICE_SET_MAX_VALUE,
     SERVICE_SET_MIN_VALUE,
+    SERVICE_UNLOCK,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,6 +124,8 @@ async def async_setup_entry(
         {vol.Required(ATTR_ENFORCE): bool},
         "async_set_enforce_bounds",
     )
+    platform.async_register_entity_service(SERVICE_LOCK, {}, "async_lock")
+    platform.async_register_entity_service(SERVICE_UNLOCK, {}, "async_unlock")
 
 
 def _resolve_wrapped_area_name(hass: HomeAssistant, wrapped_entity_id: str) -> str | None:
@@ -207,6 +213,7 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
         self._treat_min_as_closed = bool(
             config.get(CONF_TREAT_MIN_AS_CLOSED, DEFAULT_TREAT_MIN_AS_CLOSED)
         )
+        self._locked = bool(config.get(CONF_LOCKED, DEFAULT_LOCKED))
 
         # The wrapped entity's REAL supported-features bitmask, tracked
         # separately from self._attr_supported_features (which gets a
@@ -542,6 +549,7 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
             CONF_MIN_VALUE: self._effective_min(),
             CONF_MAX_VALUE: self._effective_max(),
             CONF_ENFORCE_BOUNDS: self._enforce_bounds,
+            CONF_LOCKED: self._locked,
             CONF_TREAT_MIN_AS_CLOSED: self._treat_min_as_closed,
             CONF_WRAPPED_ENTITY: self._wrapped_entity_id,
             ATTR_SIMULATED_POSITION: simulating,
@@ -565,6 +573,9 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
 
     async def _maybe_enforce_bounds(self, enforce: bool | None = None) -> None:
         """Re-clamp the (real or simulated) position if it's out of bounds."""
+
+        if self._locked:
+            return
 
         should_enforce = self._enforce_bounds if enforce is None else enforce
 
@@ -611,6 +622,9 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover, capped at the configured maximum."""
 
+        if self._locked:
+            return
+
         max_value = self._effective_max()
 
         if self._simulation_enabled():
@@ -634,6 +648,9 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover, capped at the configured minimum."""
+
+        if self._locked:
+            return
 
         min_value = self._effective_min()
 
@@ -659,6 +676,9 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
 
+        if self._locked:
+            return
+
         if self._simulation_enabled() and self._sim_move_active():
             self._freeze_sim_move()
             self.async_write_ha_state()
@@ -667,6 +687,9 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a position, clamped to the configured bounds."""
+
+        if self._locked:
+            return
 
         position = kwargs[ATTR_POSITION]
         clamped = min(max(position, self._effective_min()),
@@ -686,20 +709,32 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt (unclamped passthrough)."""
 
+        if self._locked:
+            return
+
         await self._async_call_wrapped(SERVICE_OPEN_COVER_TILT)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt (unclamped passthrough)."""
+
+        if self._locked:
+            return
 
         await self._async_call_wrapped(SERVICE_CLOSE_COVER_TILT)
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
 
+        if self._locked:
+            return
+
         await self._async_call_wrapped(SERVICE_STOP_COVER_TILT)
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a position (unclamped passthrough)."""
+
+        if self._locked:
+            return
 
         await self._async_call_wrapped(
             SERVICE_SET_COVER_TILT_POSITION,
@@ -742,3 +777,23 @@ class AdvancedCoverEntity(CoverEntity, RestoreEntity):
         )
         self.async_write_ha_state()
         await self._maybe_enforce_bounds()
+
+    async def async_lock(self) -> None:
+        """Lock the cover, blocking all commands until unlocked."""
+
+        self._locked = True
+        self.hass.config_entries.async_update_entry(
+            self._entry,
+            options={**self._entry.options, CONF_LOCKED: True},
+        )
+        self.async_write_ha_state()
+
+    async def async_unlock(self) -> None:
+        """Unlock the cover, allowing commands again."""
+
+        self._locked = False
+        self.hass.config_entries.async_update_entry(
+            self._entry,
+            options={**self._entry.options, CONF_LOCKED: False},
+        )
+        self.async_write_ha_state()
